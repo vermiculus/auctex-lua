@@ -61,66 +61,66 @@
 (defvar LaTeX-edit-Lua-code-parent-buffer-point)
 
 
-  (defun LaTeX-mark-environment-contents ()
-    "Mark the contents of the innermost LaTeX environment."
-    (interactive)
-    ;; Search for the end of the current environment.
-    (LaTeX-find-matching-end)
-    ;; Then place a mark.
-    (push-mark (search-backward "\\end"))
-    ;; Search for the beginning of the current environment.
-    (LaTeX-find-matching-begin)
-    ;; Search for the end of the \begin{...}
-    (search-forward "}"))
-    
+(defun LaTeX-mark-environment-contents ()
+  "Mark the contents of the innermost LaTeX environment."
+  (interactive)
+  ;; Search for the end of the current environment.
+  (LaTeX-find-matching-end)
+  ;; Then place a mark.
+  (push-mark (search-backward "\\end"))
+  ;; Search for the beginning of the current environment.
+  (LaTeX-find-matching-begin)
+  ;; Search for the end of the \begin{...}
+  (search-forward "}"))
+
 ;;;###autoload
-  (defun LaTeX-edit-Lua-code-start ()
-    "Place Lua code in a separate buffer in `lua-mode'."
-    (interactive)
-    (if (member (LaTeX-current-environment) LaTeX-Lua-environments)
-        (let* ((lua-buffer-name (format "*%s [Lua]*" (buffer-name)))
-               (lua-buffer (get-buffer-create lua-buffer-name))
-               (lua-code (progn (LaTeX-mark-environment-contents)
-                                (buffer-substring-no-properties (point) (mark))))
-               (lua-parent-buffer (current-buffer))
-               (lua-where-edit-started (point)))
-          (switch-to-buffer lua-buffer)
-          (setq LaTeX-edit-Lua-code-parent-buffer lua-parent-buffer)
-          (setq LaTeX-edit-Lua-code-parent-buffer-point lua-where-edit-started)
-          (lua-mode)
-	  ;; Set key bindings.
-	  (local-set-key (eval LaTeX-toggle-Lua-editing-key)
-			 'LaTeX-edit-Lua-code-finish)
-	  (local-set-key [remap save-buffer] 'LaTeX-edit-Lua-code-finish)
-	  ;; Fill the buffer with the lua code.
-	  (insert lua-code))
-      (message "Not in a Lua code environment.")))
+(defun LaTeX-edit-Lua-code-start ()
+  "Place Lua code in a separate buffer in `lua-mode'."
+  (interactive)
+  (if (member (LaTeX-current-environment) LaTeX-Lua-environments)
+      (let* ((lua-buffer-name (format "*%s [Lua]*" (buffer-name)))
+             (lua-buffer (get-buffer-create lua-buffer-name))
+             (lua-code (progn (LaTeX-mark-environment-contents)
+                              (buffer-substring-no-properties (point) (mark))))
+             (lua-parent-buffer (current-buffer))
+             (lua-where-edit-started (point)))
+        (switch-to-buffer lua-buffer)
+        (setq LaTeX-edit-Lua-code-parent-buffer lua-parent-buffer)
+        (setq LaTeX-edit-Lua-code-parent-buffer-point lua-where-edit-started)
+        (lua-mode)
+        ;; Set key bindings.
+        (local-set-key (eval LaTeX-toggle-Lua-editing-key)
+                       'LaTeX-edit-Lua-code-finish)
+        (local-set-key [remap save-buffer] 'LaTeX-edit-Lua-code-finish)
+        ;; Fill the buffer with the lua code.
+        (insert lua-code))
+    (message "Not in a Lua code environment.")))
 
-  (defun LaTeX-edit-Lua-code-finish ()
-    (interactive)
-    (if (bufferp LaTeX-edit-Lua-code-parent-buffer)
-        (let* ((lua-code (progn (widen)
-                                (LaTeX-edit-Lua--chomp
-                                 (buffer-substring (point-min)
-                                                   (point-max))))))
-          (kill-buffer)
-          (switch-to-buffer LaTeX-edit-Lua-code-parent-buffer)
-          (save-excursion
-            (goto-char LaTeX-edit-Lua-code-parent-buffer-point)
-            (LaTeX-mark-environment-contents)
-            (delete-region (point) (mark))
-            (insert lua-code)))
-      (message "%s  %s"
-               "Something went wrong."
-               "Am I *really* in a buffer created with `LaTeX-edit-Lua-code-finish'?")))
+(defun LaTeX-edit-Lua-code-finish ()
+  (interactive)
+  (if (bufferp LaTeX-edit-Lua-code-parent-buffer)
+      (let* ((lua-code (progn (widen)
+                              (LaTeX-edit-Lua--chomp
+                               (buffer-substring (point-min)
+                                                 (point-max))))))
+        (kill-buffer)
+        (switch-to-buffer LaTeX-edit-Lua-code-parent-buffer)
+        (save-excursion
+          (goto-char LaTeX-edit-Lua-code-parent-buffer-point)
+          (LaTeX-mark-environment-contents)
+          (delete-region (point) (mark))
+          (insert lua-code)))
+    (message "%s  %s"
+             "Something went wrong."
+             "Am I *really* in a buffer created with `LaTeX-edit-Lua-code-finish'?")))
 
-  ;; Adapted from the Elisp Cookbook:
-  ;; http://www.emacswiki.org/emacs/ElispCookbook#toc6
-  (defun LaTeX-edit-Lua--chomp (str)
-    "Chomp leading and tailing whitespace from STR."
-    (while (string-match "\\s*.*\\s*" str)
-      (setq str (replace-match "" t t str)))
-    str)
-    
+;; Adapted from the Elisp Cookbook:
+;; http://www.emacswiki.org/emacs/ElispCookbook#toc6
+(defun LaTeX-edit-Lua--chomp (str)
+  "Chomp leading and tailing whitespace from STR."
+  (while (string-match "\\s*.*\\s*" str)
+    (setq str (replace-match "" t t str)))
+  str)
+
 (provide 'auctex-lua)
 ;;; auctex-lua.el ends here
