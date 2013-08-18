@@ -125,5 +125,5 @@
       (setq str (replace-match "" t t str)))
     str))
     
-(provides 'auctex-lua)
+(provide 'auctex-lua)
 ;;; auctex-lua.el ends here
