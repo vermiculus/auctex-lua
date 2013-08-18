@@ -115,3 +115,4 @@
                          str)
       (setq str (replace-match "" t t str)))
     str)) ; adapted from the Elisp Cookbook: http://www.emacswiki.org/emacs/ElispCookbook#toc6
+;;; auctex-lua.el ends here
