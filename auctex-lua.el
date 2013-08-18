@@ -89,7 +89,7 @@ also `LaTeX-find-matching-begin' and `LaTeX-find-matching-end'."
              (lua-code (progn (LaTeX-mark-environment-contents) ; get lua code
                               (buffer-substring-no-properties (point) (mark)))))
         ;; Switch to the Lua buffer we just created.
-        (switch-to-buffer lua-buffer)
+        (switch-to-buffer-other-window lua-buffer)
         ;; Record some buffer-local variables
         (setq LaTeX-edit-Lua-code-parent-buffer lua-parent-buffer)
         (setq LaTeX-edit-Lua-code-parent-buffer-point lua-where-edit-started)
@@ -121,7 +121,7 @@ original one.  Remember, you can always `undo' your changes.  See
                                (buffer-substring (point-min)
                                                  (point-max))))))
         ;; Kill the Lua buffer
-        (kill-buffer)
+        (kill-buffer-and-window)
         ;; and switch to its parent
         (switch-to-buffer LaTeX-edit-Lua-code-parent-buffer)
         (save-excursion
