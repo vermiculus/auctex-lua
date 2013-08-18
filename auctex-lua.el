@@ -79,12 +79,12 @@
   "Place Lua code in a separate buffer in `lua-mode'."
   (interactive)
   (if (member (LaTeX-current-environment) LaTeX-Lua-environments)
-      (let* ((lua-buffer-name (format "*%s [Lua]*" (buffer-name)))
+      (let* ((lua-parent-buffer (current-buffer))
+             (lua-where-edit-started (point))
+             (lua-buffer-name (format "*%s [Lua]*" (buffer-name)))
              (lua-buffer (get-buffer-create lua-buffer-name))
              (lua-code (progn (LaTeX-mark-environment-contents)
-                              (buffer-substring-no-properties (point) (mark))))
-             (lua-parent-buffer (current-buffer))
-             (lua-where-edit-started (point)))
+                              (buffer-substring-no-properties (point) (mark)))))
         (switch-to-buffer lua-buffer)
         (setq LaTeX-edit-Lua-code-parent-buffer lua-parent-buffer)
         (setq LaTeX-edit-Lua-code-parent-buffer-point lua-where-edit-started)
@@ -105,10 +105,10 @@
         (kill-buffer)
         (switch-to-buffer LaTeX-edit-Lua-code-parent-buffer)
         (save-excursion
-          (goto-char LaTeX-edit-Lua-code-parent-buffer-point)
           (LaTeX-mark-environment-contents)
           (delete-region (point) (mark))
-          (insert lua-code)))
+          (insert lua-code))
+        (goto-char LaTeX-edit-Lua-code-parent-buffer-point))
     (message "%s  %s"
              "Something went wrong."
              "Am I *really* in a buffer created with `LaTeX-edit-Lua-code-finish'?")))
