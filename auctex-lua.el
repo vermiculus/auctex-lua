@@ -37,36 +37,49 @@
 ;; bind `LaTeX-edit-Lua-code-start' to it as appropriate in your
 ;; setup files (.emacs).
 
+;;; Code:
 
 (require 'lua-mode)
 
-;;;###autoload
-(defvar LaTeX-toggle-Lua-editing-key (kbd "C-c l")
-  "Your favorite key to edit embedded Lua code.")
+(defgroup LaTeX-lua nil
+  "Lua support in AUCTeX."
+  :group 'LaTeX)
 
 ;;;###autoload
-(defvar LaTeX-Lua-environments '("luacode" "luacode*")
-    "A list of environments that will contain Lua code.")
+(defcustom LaTeX-toggle-Lua-editing-key (kbd "C-c l")
+  "Your favorite key to edit embedded Lua code."
+  :group 'LaTeX-lua
+  :type 'key-sequence)
+
+;;;###autoload
+(defcustom LaTeX-Lua-environments '("luacode" "luacode*")
+  "List of environments that will contain Lua code."
+  :group 'LaTeX-lua
+  :type '(repeat (string)))
+
+(defvar LaTeX-edit-Lua-code-parent-buffer)
+(defvar LaTeX-edit-Lua-code-parent-buffer-point)
 
 (eval-and-compile
   (defun LaTeX-mark-environment-contents ()
-    "Marks the contents of the innermost LaTeX environment."
+    "Mark the contents of the innermost LaTeX environment."
     (interactive)
-    (let* ((environment-name (LaTeX-current-environment)))
-      (search-forward ; search for the end of the current environment
-       (format "\\end{%s}" environment-name))
-      (push-mark (search-backward "\\end")) ; end then place a mark
-      (search-backward ; search for the beginning of the current env
-       (format "\\begin{%s}" environment-name))
-      (search-forward "}")))) ; search for the end of the \begin{...
+    ;; Search for the end of the current environment.
+    (LaTeX-find-matching-end)
+    ;; Then place a mark.
+    (push-mark (search-backward "\\end"))
+    ;; Search for the beginning of the current environment.
+    (LaTeX-find-matching-begin)
+    ;; Search for the end of the \begin{...}
+    (search-forward "}")))
 
 ;;;###autoload
 (eval-and-compile
   (defun LaTeX-edit-Lua-code-start ()
-    "Places Lua code in a separate buffer in `lua-mode'."
+    "Place Lua code in a separate buffer in `lua-mode'."
     (interactive)
     (if (member (LaTeX-current-environment) LaTeX-Lua-environments)
-        (let* ((lua-buffer-name (format "%s [Lua]" (buffer-name)))
+        (let* ((lua-buffer-name (format "*%s [Lua]*" (buffer-name)))
                (lua-buffer (get-buffer-create lua-buffer-name))
                (lua-code (progn (LaTeX-mark-environment-contents)
                                 (buffer-substring-no-properties (point) (mark))))
@@ -76,23 +89,18 @@
           (setq LaTeX-edit-Lua-code-parent-buffer lua-parent-buffer)
           (setq LaTeX-edit-Lua-code-parent-buffer-point lua-where-edit-started)
           (lua-mode)
-          (mapc (lambda (key) ; set habit keys to finish
-                  (local-set-key key 'LaTeX-edit-Lua-code-finish))
-                (list (kbd "C-x C-s")
-                      (eval LaTeX-toggle-Lua-editing-key)))
-          (insert lua-code))
+	  ;; Set key bindings.
+	  (local-set-key (eval LaTeX-toggle-Lua-editing-key)
+			 'LaTeX-edit-Lua-code-finish)
+	  (local-set-key [remap save-buffer] 'LaTeX-edit-Lua-code-finish)
+	  ;; Fill the buffer with the lua code.
+	  (insert lua-code))
       (message "Not in a Lua code environment."))))
-
-(defun LaTeX-edit-Lua-code-get-parent-buffer ()
-  LaTeX-edit-Lua-code-parent-buffer)
-
-(defun LaTeX-edit-Lua-code-get-parent-buffer-point ()
-  LaTeX-edit-Lua-code-parent-buffer-point)
 
 (eval-and-compile
   (defun LaTeX-edit-Lua-code-finish ()
     (interactive)
-    (if (bufferp (LaTeX-edit-Lua-code-get-parent-buffer))
+    (if (bufferp LaTeX-edit-Lua-code-parent-buffer)
         (let* ((lua-code (progn (widen)
                                 (LaTeX-edit-Lua--chomp
                                  (buffer-substring (point-min)
@@ -109,10 +117,11 @@
                "Am I *really* in a buffer created with `LaTeX-edit-Lua-code-finish'?"))))
 
 (eval-and-compile
+  ;; Adapted from the Elisp Cookbook:
+  ;; http://www.emacswiki.org/emacs/ElispCookbook#toc6
   (defun LaTeX-edit-Lua--chomp (str)
     "Chomp leading and tailing whitespace from STR."
-    (while (string-match "\\s*.*\\s*"
-                         str)
+    (while (string-match "\\s*.*\\s*" str)
       (setq str (replace-match "" t t str)))
-    str)) ; adapted from the Elisp Cookbook: http://www.emacswiki.org/emacs/ElispCookbook#toc6
+    str))
 ;;; auctex-lua.el ends here
