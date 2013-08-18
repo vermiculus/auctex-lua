@@ -63,7 +63,8 @@
 
 
 (defun LaTeX-mark-environment-contents ()
-  "Mark the contents of the innermost LaTeX environment."
+  "Mark the contents of the innermost LaTeX environment.  See
+also `LaTeX-find-matching-begin' and `LaTeX-find-matching-end'."
   (interactive)
   ;; Search for the end of the current environment.
   (LaTeX-find-matching-end)
@@ -78,36 +79,59 @@
 (defun LaTeX-edit-Lua-code-start ()
   "Place Lua code in a separate buffer in `lua-mode'."
   (interactive)
+  ;; If we are in a Lua environment,
   (if (member (LaTeX-current-environment) LaTeX-Lua-environments)
+      ;; Make a few notes about where we are and what we're looking at
       (let* ((lua-parent-buffer (current-buffer))
              (lua-where-edit-started (point))
              (lua-buffer-name (format "*%s [Lua]*" (buffer-name)))
-             (lua-buffer (get-buffer-create lua-buffer-name))
-             (lua-code (progn (LaTeX-mark-environment-contents)
+             (lua-buffer (get-buffer-create lua-buffer-name)) ; prepare buffer
+             (lua-code (progn (LaTeX-mark-environment-contents) ; get lua code
                               (buffer-substring-no-properties (point) (mark)))))
+        ;; Switch to the Lua buffer we just created.
         (switch-to-buffer lua-buffer)
+        ;; Record some buffer-local variables
         (setq LaTeX-edit-Lua-code-parent-buffer lua-parent-buffer)
         (setq LaTeX-edit-Lua-code-parent-buffer-point lua-where-edit-started)
+        ;; and switch this buffer to `lua-mode'
         (lua-mode)
         ;; Set key bindings.
         (local-set-key [remap save-buffer] 'LaTeX-edit-Lua-code-finish)
-        ;; Fill the buffer with the lua code.
+        ;; Fill the buffer with the Lua code.
         (insert lua-code))
     (message "Not in a Lua code environment.")))
 
 (defun LaTeX-edit-Lua-code-finish ()
+  "Dump the contents of the current buffer into the
+buffer/environment it was called from, replacing what is
+currently in that environment.
+
+Note that this function isn't too smart yet; it does not
+intelligently handle a scenario where other editing has taken
+place in the parent buffer.  If point has moved into a different
+environment, that environment will be replaced instead of its
+original one.  Remember, you can always `undo' your changes.  See
+`LaTeX-mark-environment-contents'."
   (interactive)
+  ;; 'Ensure' this is a Lua code buffer that was made with `LaTeX-edit-Lua-code-start'
   (if (bufferp LaTeX-edit-Lua-code-parent-buffer)
+      ;; Grab the Lua code
       (let* ((lua-code (progn (widen)
                               (LaTeX-edit-Lua--chomp
                                (buffer-substring (point-min)
                                                  (point-max))))))
+        ;; Kill the Lua buffer
         (kill-buffer)
+        ;; and switch to its parent
         (switch-to-buffer LaTeX-edit-Lua-code-parent-buffer)
         (save-excursion
+          ;; Mark the current environment
           (LaTeX-mark-environment-contents)
+          ;; and replace it
           (delete-region (point) (mark))
+          ;; with the Lua code
           (insert lua-code))
+        ;; and return point to its rightful place
         (goto-char LaTeX-edit-Lua-code-parent-buffer-point))
     (message "%s  %s"
              "Something went wrong."
