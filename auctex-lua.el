@@ -60,7 +60,7 @@
 (defvar LaTeX-edit-Lua-code-parent-buffer)
 (defvar LaTeX-edit-Lua-code-parent-buffer-point)
 
-(eval-and-compile
+
   (defun LaTeX-mark-environment-contents ()
     "Mark the contents of the innermost LaTeX environment."
     (interactive)
@@ -71,10 +71,9 @@
     ;; Search for the beginning of the current environment.
     (LaTeX-find-matching-begin)
     ;; Search for the end of the \begin{...}
-    (search-forward "}")))
-
+    (search-forward "}"))
+    
 ;;;###autoload
-(eval-and-compile
   (defun LaTeX-edit-Lua-code-start ()
     "Place Lua code in a separate buffer in `lua-mode'."
     (interactive)
@@ -95,9 +94,8 @@
 	  (local-set-key [remap save-buffer] 'LaTeX-edit-Lua-code-finish)
 	  ;; Fill the buffer with the lua code.
 	  (insert lua-code))
-      (message "Not in a Lua code environment."))))
+      (message "Not in a Lua code environment.")))
 
-(eval-and-compile
   (defun LaTeX-edit-Lua-code-finish ()
     (interactive)
     (if (bufferp LaTeX-edit-Lua-code-parent-buffer)
@@ -114,16 +112,15 @@
             (insert lua-code)))
       (message "%s  %s"
                "Something went wrong."
-               "Am I *really* in a buffer created with `LaTeX-edit-Lua-code-finish'?"))))
+               "Am I *really* in a buffer created with `LaTeX-edit-Lua-code-finish'?")))
 
-(eval-and-compile
   ;; Adapted from the Elisp Cookbook:
   ;; http://www.emacswiki.org/emacs/ElispCookbook#toc6
   (defun LaTeX-edit-Lua--chomp (str)
     "Chomp leading and tailing whitespace from STR."
     (while (string-match "\\s*.*\\s*" str)
       (setq str (replace-match "" t t str)))
-    str))
+    str)
     
 (provide 'auctex-lua)
 ;;; auctex-lua.el ends here
