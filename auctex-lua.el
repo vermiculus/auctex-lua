@@ -4,7 +4,7 @@
 ;;
 ;; Author: Sean Allred (seallred@smcm.edu)
 ;; Version: 1.0
-;; Package-Requires ((auctex "11.86") (lua-mode "20130528.1415"))
+;; Package-Requires ((auctex "11.86") (lua-mode "20130419"))
 ;; URL: http://github.com/vermiculus/auctex-lua
 ;;
 ;; This file is NOT part of Emacs.
@@ -124,4 +124,6 @@
     (while (string-match "\\s*.*\\s*" str)
       (setq str (replace-match "" t t str)))
     str))
+    
+(provides 'auctex-lua)
 ;;; auctex-lua.el ends here
