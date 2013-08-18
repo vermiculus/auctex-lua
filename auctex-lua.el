@@ -32,10 +32,17 @@
 ;;; Commentary:
 ;;
 ;; This package provides some basic utilities for working with Lua
-;; code from within AUCTeX.  To start using it, customize
-;; `LaTeX-toggle-Lua-editing-key' to your liking (default "C-c l") and
-;; bind `LaTeX-edit-Lua-code-start' to it as appropriate in your
-;; setup files (.emacs).
+;; code from within AUCTeX.  `LaTeX-edit-Lua-code-start' is the entry
+;; point of this package; bind it to your favorite key and use it
+;; inside of any environment in `LaTeX-Lua-environments'.  To commit
+;; your changes to the parent buffer and return to it, simply use
+;; `save-buffer' (or whichever key it is bound to).  The contents of
+;; the parent buffer will be updated and the Lua buffer will be killed.
+;; 
+;; Beware!  Editing embedded Lua code is asynchronous.  If you kill
+;; the buffer that was editing it, your changes will be lost!  In a
+;; future update I will add a `yes-or-no-p' confirmation to killing
+;; the buffer, but I've yet to figure that one out.
 
 ;;; Code:
 
@@ -44,12 +51,6 @@
 (defgroup LaTeX-lua nil
   "Lua support in AUCTeX."
   :group 'LaTeX)
-
-;;;###autoload
-(defcustom LaTeX-toggle-Lua-editing-key (kbd "C-c l")
-  "Your favorite key to edit embedded Lua code."
-  :group 'LaTeX-lua
-  :type 'key-sequence)
 
 ;;;###autoload
 (defcustom LaTeX-Lua-environments '("luacode" "luacode*")
@@ -89,8 +90,6 @@
         (setq LaTeX-edit-Lua-code-parent-buffer-point lua-where-edit-started)
         (lua-mode)
         ;; Set key bindings.
-        (local-set-key (eval LaTeX-toggle-Lua-editing-key)
-                       'LaTeX-edit-Lua-code-finish)
         (local-set-key [remap save-buffer] 'LaTeX-edit-Lua-code-finish)
         ;; Fill the buffer with the lua code.
         (insert lua-code))
