@@ -4,7 +4,7 @@
 ;;
 ;; Author: Sean Allred (seallred@smcm.edu)
 ;; Version: 1.0
-;; Package-Requires ((auctex "11.86") (lua-mode "20130419"))
+;; Package-Requires: ((auctex "11.86") (lua-mode "20130419"))
 ;; URL: http://github.com/vermiculus/auctex-lua
 ;;
 ;; This file is NOT part of Emacs.
